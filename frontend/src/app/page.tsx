@@ -7,10 +7,11 @@ import { Movie, Recommendation } from "@/lib/types";
 import { HeroSection } from "@/components/HeroSection";
 import { MovieCarousel } from "@/components/MovieCarousel";
 import { MovieCarouselSkeleton } from "@/components/LoadingSkeleton";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const { user } = useAuth();
-  
+
   const [trending, setTrending] = useState<Movie[]>([]);
   const [topRated, setTopRated] = useState<Movie[]>([]);
   const [action, setAction] = useState<Movie[]>([]);
@@ -18,7 +19,7 @@ export default function Home() {
   const [sciFi, setSciFi] = useState<Movie[]>([]);
   const [drama, setDrama] = useState<Movie[]>([]);
   const [personalized, setPersonalized] = useState<Movie[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [personalizedLoading, setPersonalizedLoading] = useState(false);
 
@@ -26,7 +27,7 @@ export default function Home() {
     const fetchMovies = async () => {
       try {
         setLoading(true);
-        // Fetch rows
+        // Fetch movie collections
         const trendingData = await api.getTrendingMovies();
         setTrending(trendingData);
 
@@ -44,7 +45,6 @@ export default function Home() {
 
         const dramaData = await api.getMovies(1, 15, "Drama");
         setDrama(dramaData.movies);
-
       } catch (e) {
         console.error("Failed to fetch home page movies", e);
       } finally {
@@ -64,7 +64,6 @@ export default function Home() {
       try {
         setPersonalizedLoading(true);
         const data = await api.getPersonalizedRecommendations();
-        // data returns list of { movie, score }
         const mapped = data.map((r: Recommendation) => r.movie);
         setPersonalized(mapped);
       } catch (e) {
@@ -78,23 +77,25 @@ export default function Home() {
   }, [user]);
 
   return (
-    <div className="w-full pb-16 flex flex-col">
+    <div className="w-full pb-20 flex flex-col grad-hero">
       {loading ? (
-        // Initial Full Shimmer Page
+        // Initial Full Page Shimmer Loader
         <div className="w-full">
-          <div className="w-full h-[60vh] shimmer animate-pulse mb-8" />
-          <MovieCarouselSkeleton />
-          <MovieCarouselSkeleton />
+          <div className="w-full h-[65vh] shimmer animate-pulse mb-8" />
+          <div className="flex flex-col gap-6">
+            <MovieCarouselSkeleton />
+            <MovieCarouselSkeleton />
+          </div>
         </div>
       ) : (
         <>
-          {/* Main Hero Featured Rotation */}
+          {/* Main Cinematic Hero Banner */}
           <HeroSection movies={trending.slice(0, 5)} />
 
-          {/* Catalog Lists Rows */}
-          <div className="flex flex-col gap-6 -mt-16 md:-mt-24 z-10 relative">
+          {/* Carousel rows overlapping the hero backdrop */}
+          <div className="flex flex-col gap-8 -mt-16 md:-mt-28 z-10 relative px-4 md:px-0">
             
-            {/* Personalized Row */}
+            {/* User Personalized Recommendations */}
             {user && (
               personalizedLoading ? (
                 <MovieCarouselSkeleton />
@@ -110,16 +111,18 @@ export default function Home() {
             )}
 
             <MovieCarousel title="Trending Now" movies={trending} />
-            
             <MovieCarousel title="Highest Rated" movies={topRated} />
-            
-            <MovieCarousel title="Action & Adventure Blockbusters" movies={action} />
-            
-            <MovieCarousel title="Sci-Fi & Cyberpunk Legends" movies={sciFi} />
-            
-            <MovieCarousel title="Side-Splitting Comedies" movies={comedy} />
-            
-            <MovieCarousel title="Emotional Dramas" movies={drama} />
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              className="flex flex-col gap-8"
+            >
+              <MovieCarousel title="Action & Adventure Blockbusters" movies={action} />
+              <MovieCarousel title="Sci-Fi & Cyberpunk Legends" movies={sciFi} />
+              <MovieCarousel title="Side-Splitting Comedies" movies={comedy} />
+              <MovieCarousel title="Emotional Dramas" movies={drama} />
+            </motion.div>
           </div>
         </>
       )}

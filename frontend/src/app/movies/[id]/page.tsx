@@ -9,7 +9,7 @@ import { Movie, Review, Recommendation } from "@/lib/types";
 import { RatingStars } from "@/components/RatingStars";
 import { MovieCarousel } from "@/components/MovieCarousel";
 import { MovieDetailSkeleton } from "@/components/LoadingSkeleton";
-import { Heart, Send, Calendar, User as UserIcon, Clapperboard, Sparkles } from "lucide-react";
+import { Heart, Send, Calendar, User as UserIcon, Clapperboard, Sparkles, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function MovieDetailPage() {
@@ -22,7 +22,7 @@ export default function MovieDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userRating, setUserRating] = useState<number>(0);
   const [isFavorite, setIsFavorite] = useState(false);
-  
+
   const [loading, setLoading] = useState(true);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewInput, setReviewInput] = useState("");
@@ -30,21 +30,17 @@ export default function MovieDetailPage() {
   const fetchMovieData = async () => {
     try {
       setLoading(true);
-      // Fetch details
       const detailData = await api.getMovie(movieId);
       setMovie(detailData);
       setIsFavorite(detailData.is_favorite);
       setUserRating(detailData.user_rating || 0);
 
-      // Fetch similar
       const similarData = await api.getSimilarMovies(movieId);
       setSimilar(similarData.map((r: Recommendation) => r.movie));
 
-      // Fetch reviews
       const reviewsData = await api.getMovieReviews(movieId);
       setReviews(reviewsData);
 
-      // Add to watch history
       if (user) {
         api.addToWatchHistory(movieId).catch(() => {});
       }
@@ -66,7 +62,6 @@ export default function MovieDetailPage() {
     try {
       setUserRating(newRating);
       await api.rateMovie(movieId, newRating);
-      // Refresh movie detail average rating
       const updated = await api.getMovie(movieId);
       setMovie(updated);
     } catch (e) {
@@ -106,137 +101,145 @@ export default function MovieDetailPage() {
 
   if (!movie) {
     return (
-      <div className="w-full flex-1 flex flex-col items-center justify-center p-8 text-center">
-        <span className="text-4xl mb-2">⚠️</span>
-        <h2 className="text-xl font-bold text-white">Movie Not Found</h2>
-        <p className="text-xs text-text-secondary mt-1">
-          The requested movie catalogue item could not be retrieved.
+      <div className="w-full flex-1 flex flex-col items-center justify-center py-24 px-4 text-center grad-hero">
+        <AlertCircle size={40} className="text-primary animate-pulse mb-3" />
+        <h2 className="text-xl font-bold text-white uppercase tracking-wider">Movie Not Found</h2>
+        <p className="text-xs text-text-secondary mt-1 max-w-xs font-semibold">
+          We could not fetch this catalog item. It may have been deleted or does not exist.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="w-full pb-20 flex flex-col">
-      {/* Backdrop Hero Header */}
-      <div className="relative w-full h-[55vh] md:h-[65vh] overflow-hidden bg-black">
+    <div className="w-full pb-20 flex flex-col grad-hero noise">
+      {/* Dynamic Blurred Backdrop Poster */}
+      <div className="relative w-full h-[55vh] md:h-[65vh] overflow-hidden bg-black select-none">
         {movie.backdrop_url ? (
           <Image
             src={movie.backdrop_url}
             alt={movie.title}
             fill
             priority
-            className="object-cover object-top opacity-35 brightness-[0.5]"
+            className="object-cover object-top opacity-30 brightness-[0.4] saturate-[1.2]"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-800 to-black" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       </div>
 
-      {/* Main Info Block */}
-      <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-44 md:-mt-64 z-15 relative flex flex-col md:flex-row gap-8 items-start w-full">
-        {/* Left Side: Poster */}
-        <div className="w-48 md:w-64 rounded-xl overflow-hidden shadow-2xl bg-zinc-900 border border-white/10 shrink-0 self-center md:self-auto">
+      {/* Main Movie Content */}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-44 md:-mt-64 z-10 relative flex flex-col md:flex-row gap-10 items-start w-full">
+        {/* Left column: Poster image */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="w-48 md:w-64 rounded-xl overflow-hidden shadow-2xl bg-zinc-950 border border-white/10 shrink-0 self-center md:self-auto"
+        >
           {movie.poster_url ? (
             <Image
               src={movie.poster_url}
               alt={movie.title}
               width={256}
               height={384}
+              priority
               className="w-full h-auto object-cover"
             />
           ) : (
-            <div className="aspect-[2/3] w-full bg-gradient-to-br from-zinc-800 to-black flex flex-col items-center justify-center p-4 text-center">
+            <div className="aspect-[2/3] w-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex flex-col items-center justify-center p-6 text-center">
               <span className="text-6xl mb-4">🎬</span>
               <span className="text-sm font-black text-white">{movie.title}</span>
             </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* Right Side: Data Details */}
-        <div className="flex-1 flex flex-col gap-4 text-left w-full">
-          {/* Metadata tag pills */}
+        {/* Right column: Details and interactive features */}
+        <div className="flex-1 flex flex-col gap-5 text-left w-full">
+          {/* Metadata chips */}
           <div className="flex flex-wrap items-center gap-2.5">
             {movie.release_year && (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-text-secondary bg-white/5 border border-white/10 px-2.5 py-1 rounded-md">
-                <Calendar size={12} />
+              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-text-secondary bg-white/5 border border-white/5 px-3 py-1 rounded-full">
+                <Calendar size={12} className="text-violet-500" />
                 <span>{movie.release_year}</span>
               </span>
             )}
             {movie.director && (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-text-secondary bg-white/5 border border-white/10 px-2.5 py-1 rounded-md">
-                <Clapperboard size={12} />
-                <span>Dir: {movie.director}</span>
+              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-text-secondary bg-white/5 border border-white/5 px-3 py-1 rounded-full">
+                <Clapperboard size={12} className="text-primary" />
+                <span>Director: {movie.director}</span>
               </span>
             )}
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">
+          <h1 className="text-3xl md:text-5xl font-black text-white leading-tight drop-shadow-md">
             {movie.title}
           </h1>
 
-          {/* Rating aggregate and Favorites toggle button */}
-          <div className="flex flex-wrap items-center gap-4 py-1.5 border-y border-white/5">
-            <div className="flex items-center gap-2">
+          {/* Ratings row */}
+          <div className="flex flex-wrap items-center gap-4 py-2 border-y border-white/5 w-full">
+            <div className="flex items-center gap-2.5">
               <RatingStars rating={movie.rating / 2} size="md" />
-              <span className="text-sm font-black text-accent">{movie.rating.toFixed(1)} / 10</span>
-              <span className="text-[10px] text-text-muted">({movie.popularity.toFixed(0)} votes)</span>
+              <span className="text-sm font-black text-accent">{movie.rating.toFixed(1)} <span className="text-xs text-text-muted">/ 10</span></span>
+              {movie.popularity > 0 && (
+                <span className="text-[10px] font-bold text-text-muted">({Math.round(movie.popularity)} votes)</span>
+              )}
             </div>
-            
+
             {user && (
               <button
                 onClick={handleFavoriteToggle}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-black uppercase transition-all cursor-pointer ${
                   isFavorite
-                    ? "bg-primary/10 border-primary text-primary"
-                    : "bg-white/5 border-white/10 text-text-secondary hover:text-white"
+                    ? "bg-primary/15 border-primary/30 text-primary glow-red"
+                    : "bg-white/5 border-white/5 text-text-secondary hover:text-white hover:bg-white/10"
                 }`}
               >
-                <Heart size={14} className={isFavorite ? "fill-primary" : ""} />
-                <span>{isFavorite ? "Favorited" : "Add to Favorites"}</span>
+                <Heart size={13} className={isFavorite ? "fill-primary text-primary" : ""} />
+                <span>{isFavorite ? "Favorited" : "Add to List"}</span>
               </button>
             )}
           </div>
 
-          {/* Genres breakdown */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* Genres badges */}
+          <div className="flex flex-wrap gap-2">
             {movie.genres.split("|").map((g) => (
-              <span key={g} className="text-xs font-bold text-white bg-primary px-3 py-1 rounded-full shadow">
+              <span key={g} className="genre-tag">
                 {g}
               </span>
             ))}
           </div>
 
-          {/* Overview text */}
-          <div className="flex flex-col gap-2 mt-2">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">Synopsis</h3>
-            <p className="text-sm text-text-secondary font-medium leading-relaxed max-w-3xl">
+          {/* Synopsis */}
+          <div className="flex flex-col gap-2.5 mt-2">
+            <h3 className="text-xs font-black text-white uppercase tracking-widest">Synopsis</h3>
+            <p className="text-xs md:text-sm text-text-secondary font-medium leading-relaxed max-w-3xl">
               {movie.overview}
             </p>
           </div>
 
-          {/* Cast members details */}
+          {/* Cast */}
           {movie.cast_members && (
-            <div className="flex flex-col gap-1.5 mt-2">
-              <h3 className="text-sm font-black text-white uppercase tracking-wider">Cast</h3>
-              <p className="text-xs text-text-secondary font-semibold leading-relaxed">
+            <div className="flex flex-col gap-2 mt-2">
+              <h3 className="text-xs font-black text-white uppercase tracking-widest">Cast</h3>
+              <p className="text-xs text-text-secondary font-semibold leading-relaxed max-w-2xl">
                 {movie.cast_members}
               </p>
             </div>
           )}
 
-          {/* Rate interactively */}
+          {/* Interactive Rating Component */}
           {user && (
-            <div className="flex flex-col gap-2 mt-4 p-4 rounded-xl glass-light border border-white/5 max-w-sm">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles size={13} className="text-primary animate-pulse" />
-                <span>Your Movie Rating</span>
+            <div className="flex flex-col gap-2.5 mt-4 p-5 rounded-2xl glass border border-white/5 max-w-sm">
+              <h4 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+                <Sparkles size={13} className="text-primary fill-primary animate-pulse" />
+                <span>Submit Your Rating</span>
               </h4>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <RatingStars rating={userRating} interactive={true} onRate={handleRate} size="lg" />
                 <span className="text-xs font-black text-text-secondary">
-                  {userRating > 0 ? `${userRating} Stars` : "Unrated"}
+                  {userRating > 0 ? `${userRating} Stars` : "Not Rated"}
                 </span>
               </div>
             </div>
@@ -244,16 +247,18 @@ export default function MovieDetailPage() {
         </div>
       </div>
 
-      {/* Similar Movies shelf */}
-      <div className="mt-16 w-full">
-        <MovieCarousel title="Similar Movies You Might Like" movies={similar} />
-      </div>
+      {/* Similar movies carousels */}
+      {similar.length > 0 && (
+        <div className="mt-16 w-full">
+          <MovieCarousel title="Similar Movies You Might Enjoy" movies={similar} />
+        </div>
+      )}
 
-      {/* Reviews box */}
-      <div id="reviews" className="max-w-6xl mx-auto px-4 md:px-8 mt-12 w-full grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Submit Review Column */}
-        <div className="md:col-span-1 flex flex-col gap-4">
-          <h3 className="text-base font-bold text-white uppercase tracking-wider">
+      {/* Reviews feed section */}
+      <div id="reviews" className="max-w-6xl mx-auto px-4 md:px-8 mt-12 w-full grid grid-cols-1 md:grid-cols-3 gap-10">
+        {/* Write a review column */}
+        <div className="md:col-span-1 flex flex-col gap-4 text-left">
+          <h3 className="text-sm font-black text-white uppercase tracking-widest border-b border-white/5 pb-2">
             Write a Review
           </h3>
           {user ? (
@@ -263,32 +268,32 @@ export default function MovieDetailPage() {
                 value={reviewInput}
                 onChange={(e) => setReviewInput(e.target.value)}
                 rows={4}
-                className="bg-zinc-900 border border-white/10 rounded-lg p-3 text-xs text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-all font-medium resize-none"
+                className="input-base text-xs font-semibold resize-none"
               />
               <button
                 type="submit"
                 disabled={!reviewInput.trim() || submittingReview}
-                className="bg-primary hover:bg-primary-hover text-xs font-bold text-white py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 self-end transition-all shadow cursor-pointer disabled:opacity-40"
+                className="btn-primary py-2 px-5 text-xs rounded-xl flex items-center justify-center gap-2 self-end select-none disabled:opacity-40"
               >
-                <Send size={12} />
-                <span>Submit Review</span>
+                <Send size={13} />
+                <span>Post Review</span>
               </button>
             </form>
           ) : (
-            <div className="bg-white/5 border border-white/5 rounded-lg p-4 text-center text-xs text-text-secondary font-medium">
+            <div className="bg-white/5 border border-white/5 rounded-xl p-5 text-center text-xs text-text-secondary font-bold">
               Please sign in to write a review.
             </div>
           )}
         </div>
 
-        {/* Reviews Feed Column */}
+        {/* Reviews list column */}
         <div className="md:col-span-2 flex flex-col gap-4 text-left">
-          <h3 className="text-base font-bold text-white uppercase tracking-wider">
+          <h3 className="text-sm font-black text-white uppercase tracking-widest border-b border-white/5 pb-2">
             User Reviews ({reviews.length})
           </h3>
-          
+
           {reviews.length > 0 ? (
-            <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2">
+            <div className="flex flex-col gap-4 max-h-[420px] overflow-y-auto pr-2">
               {reviews.map((rev) => {
                 const sentimentColors = {
                   positive: "bg-emerald-500/10 border-emerald-500/20 text-emerald-500",
@@ -299,37 +304,41 @@ export default function MovieDetailPage() {
                 const sentimentClass = sentimentColors[sentimentLabel as keyof typeof sentimentColors];
 
                 return (
-                  <div key={rev.id} className="glass p-4 rounded-xl border border-white/5 flex flex-col gap-2.5">
+                  <div key={rev.id} className="glass p-5 rounded-2xl border border-white/5 flex flex-col gap-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md">
                           {rev.user_name?.charAt(0) || "U"}
                         </div>
-                        <span className="text-xs font-bold text-white">
-                          {rev.user_name || "Anonymous User"}
+                        <span className="text-xs font-black text-white">
+                          {rev.user_name || "Anonymous Moviegoer"}
                         </span>
                       </div>
-                      
-                      {/* TextBlob Sentiment Badge */}
-                      <span className={`text-[9px] font-black uppercase tracking-wider border px-2 py-0.5 rounded-full ${sentimentClass}`}>
+
+                      {/* Sentiment tag */}
+                      <span className={`text-[9px] font-black uppercase tracking-widest border px-2.5 py-0.5 rounded-full ${sentimentClass}`}>
                         {sentimentLabel}
                       </span>
                     </div>
 
-                    <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                    <p className="text-xs text-text-secondary leading-relaxed font-semibold">
                       {rev.review_text}
                     </p>
 
-                    <span className="text-[9px] text-text-muted font-bold self-end">
-                      {new Date(rev.created_at).toLocaleDateString()}
+                    <span className="text-[9px] text-text-muted font-bold self-end uppercase tracking-wider">
+                      {new Date(rev.created_at).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="bg-white/5 border border-white/5 rounded-lg py-12 text-center text-xs text-text-secondary font-medium">
-              No reviews yet. Be the first to share your thoughts!
+            <div className="bg-white/5 border border-white/5 rounded-xl py-12 text-center text-xs text-text-secondary font-bold">
+              No reviews listed yet. Write the first review!
             </div>
           )}
         </div>

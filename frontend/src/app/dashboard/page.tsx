@@ -9,22 +9,19 @@ import { MovieCard } from "@/components/MovieCard";
 import { RatingStars } from "@/components/RatingStars";
 import { MovieCardSkeleton } from "@/components/LoadingSkeleton";
 import { LayoutDashboard, Heart, Star, History, Settings, Check, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function UserDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, updateUser } = useAuth();
 
-  // Navigation tab states
   const [activeTab, setActiveTab] = useState<"ratings" | "favorites" | "history" | "settings">("ratings");
 
-  // Data states
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [favorites, setFavorites] = useState<Movie[]>([]);
   const [history, setHistory] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Settings states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,7 +79,7 @@ export default function UserDashboard() {
     try {
       const data: any = { name, email };
       if (password) data.password = password;
-      
+
       const updated = await api.updateProfile(data);
       updateUser(updated);
       setSettingsSuccess("Profile updated successfully!");
@@ -107,48 +104,48 @@ export default function UserDashboard() {
     { id: "ratings", label: "My Ratings", icon: Star },
     { id: "favorites", label: "Favorites List", icon: Heart },
     { id: "history", label: "Watch History", icon: History },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "settings", label: "Profile Settings", icon: Settings },
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 flex flex-col gap-10 w-full text-left">
+    <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 flex flex-col gap-10 w-full text-left grad-hero noise">
       
       {/* Profile Header card */}
-      <div className="glass p-6 md:p-8 rounded-xl border border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+      <div className="glass-card p-6 md:p-8 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xl">
         <div className="flex items-center gap-4 text-center md:text-left">
-          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 text-white font-black text-xl uppercase">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr from-primary to-violet-500 flex items-center justify-center border border-white/10 text-white font-black text-xl uppercase shadow-md select-none">
             {user.name.charAt(0)}
           </div>
           <div className="flex flex-col">
             <h1 className="text-xl md:text-2xl font-black text-white">{user.name}</h1>
-            <span className="text-xs text-text-secondary mt-0.5">{user.email}</span>
-            <span className="text-[10px] text-text-muted mt-1 font-semibold">
+            <span className="text-xs text-text-secondary mt-0.5 font-semibold">{user.email}</span>
+            <span className="text-[10px] text-text-muted mt-1 font-bold uppercase tracking-wider">
               Member since {new Date(user.created_at).toLocaleDateString()}
             </span>
           </div>
         </div>
 
-        {/* Aggregate Stats Cards */}
+        {/* Stats column */}
         <div className="flex gap-6 items-center">
           <div className="flex flex-col items-center">
             <span className="text-2xl font-black text-white">{ratings.length}</span>
-            <span className="text-[9px] uppercase font-bold text-text-muted tracking-wider mt-0.5">Rated</span>
+            <span className="text-[9px] uppercase font-bold text-text-muted tracking-widest mt-0.5">Rated</span>
           </div>
           <div className="w-px h-8 bg-white/10" />
           <div className="flex flex-col items-center">
             <span className="text-2xl font-black text-white">{favorites.length}</span>
-            <span className="text-[9px] uppercase font-bold text-text-muted tracking-wider mt-0.5">Favorites</span>
+            <span className="text-[9px] uppercase font-bold text-text-muted tracking-widest mt-0.5">Favorites</span>
           </div>
           <div className="w-px h-8 bg-white/10" />
           <div className="flex flex-col items-center">
             <span className="text-2xl font-black text-white">{history.length}</span>
-            <span className="text-[9px] uppercase font-bold text-text-muted tracking-wider mt-0.5">Watched</span>
+            <span className="text-[9px] uppercase font-bold text-text-muted tracking-widest mt-0.5">Watched</span>
           </div>
         </div>
       </div>
 
-      {/* Navigation tabs */}
-      <div className="flex border-b border-white/5 overflow-x-auto gap-4 md:gap-6 no-scrollbar shrink-0">
+      {/* Tabs navigation panel */}
+      <div className="flex border-b border-white/5 overflow-x-auto gap-4 md:gap-6 no-scrollbar shrink-0 select-none">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -156,7 +153,7 @@ export default function UserDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 pb-3.5 text-xs font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap px-1 select-none ${
+              className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider transition-all border-b-2 cursor-pointer whitespace-nowrap px-1 ${
                 active
                   ? "border-primary text-primary"
                   : "border-transparent text-text-secondary hover:text-white"
@@ -169,117 +166,140 @@ export default function UserDashboard() {
         })}
       </div>
 
-      {/* Tab Contents */}
+      {/* Tab components lists */}
       <div className="w-full">
         {loading && activeTab !== "settings" ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {Array.from({ length: 5 }).map((_, i) => (
               <MovieCardSkeleton key={i} />
             ))}
           </div>
         ) : (
-          <>
-            {/* 1. Ratings Tab */}
+          <AnimatePresence mode="wait">
+            {/* Ratings tab contents */}
             {activeTab === "ratings" && (
-              ratings.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {ratings.map((rat) => (
-                    <div key={rat.id} className="relative group">
-                      <MovieCard movie={rat.movie} />
-                      <div className="absolute top-2 left-2 z-25 bg-[#070707]/90 backdrop-blur border border-accent/20 px-2 py-1 rounded-md flex items-center gap-1 shadow">
-                        <Star size={10} className="fill-accent text-accent" />
-                        <span className="text-[9px] font-black text-white">{rat.rating}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white/5 border border-white/5 rounded-xl py-16 text-center text-xs text-text-secondary font-medium">
-                  You haven&apos;t rated any movies yet.
-                </div>
-              )
-            )}
-
-            {/* 2. Favorites Tab */}
-            {activeTab === "favorites" && (
-              favorites.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {favorites.map((m) => (
-                    <MovieCard key={m.id} movie={m} />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white/5 border border-white/5 rounded-xl py-16 text-center text-xs text-text-secondary font-medium">
-                  Your favorites list is currently empty.
-                </div>
-              )
-            )}
-
-            {/* 3. History Tab */}
-            {activeTab === "history" && (
-              history.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {history.map((m) => (
-                    <MovieCard key={m.id} movie={m} />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white/5 border border-white/5 rounded-xl py-16 text-center text-xs text-text-secondary font-medium">
-                  Watch history is currently empty.
-                </div>
-              )
-            )}
-
-            {/* 4. Profile settings Tab */}
-            {activeTab === "settings" && (
               <motion.div
+                key="ratings-tab"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-md bg-surface border border-white/5 rounded-xl p-6 md:p-8 flex flex-col gap-6"
+                exit={{ opacity: 0, y: 10 }}
               >
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Update Profile Details
+                {ratings.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                    {ratings.map((rat) => (
+                      <div key={rat.id} className="relative group">
+                        <MovieCard movie={rat.movie} />
+                        <div className="absolute top-2 left-2 z-20 bg-black/70 backdrop-blur border border-accent/20 px-2 py-0.5 rounded-md flex items-center gap-1 shadow select-none">
+                          <Star size={10} className="fill-accent text-accent" />
+                          <span className="text-[9px] font-black text-white">{rat.rating}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white/5 border border-white/5 rounded-2xl py-16 text-center text-xs text-text-secondary font-bold">
+                    You haven&apos;t rated any movies yet. Go rate some in the home catalogue!
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Favorites tab contents */}
+            {activeTab === "favorites" && (
+              <motion.div
+                key="favorites-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+              >
+                {favorites.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                    {favorites.map((m) => (
+                      <MovieCard key={m.id} movie={m} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white/5 border border-white/5 rounded-2xl py-16 text-center text-xs text-text-secondary font-bold">
+                    Your favorites list is currently empty. Bookmark movies to show them here!
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* History tab contents */}
+            {activeTab === "history" && (
+              <motion.div
+                key="history-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+              >
+                {history.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                    {history.map((m) => (
+                      <MovieCard key={m.id} movie={m} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white/5 border border-white/5 rounded-2xl py-16 text-center text-xs text-text-secondary font-bold">
+                    Watch history is empty. Your watch timeline is auto-compiled as you open movies.
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Profile settings contents */}
+            {activeTab === "settings" && (
+              <motion.div
+                key="settings-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="max-w-md bg-surface border border-white/5 rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-xl"
+              >
+                <h3 className="text-xs font-black text-white uppercase tracking-widest border-b border-white/5 pb-2">
+                  Update Account Settings
                 </h3>
 
                 {settingsSuccess && (
-                  <div className="text-[11px] font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-lg py-2 px-3 text-center flex items-center justify-center gap-1.5">
-                    <Check size={13} />
+                  <div className="text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-3 px-4 text-center flex items-center justify-center gap-2">
+                    <Check size={14} />
                     <span>{settingsSuccess}</span>
                   </div>
                 )}
                 {settingsError && (
-                  <div className="text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 rounded-lg py-2 px-3 text-center">
+                  <div className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 rounded-xl py-3 px-4 text-center">
                     {settingsError}
                   </div>
                 )}
 
-                <form onSubmit={handleUpdateSettings} className="flex flex-col gap-4 text-xs font-semibold">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-text-secondary uppercase tracking-wider">
-                      Your Name
+                <form onSubmit={handleUpdateSettings} className="flex flex-col gap-4.5 text-xs font-semibold text-left">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] text-text-secondary uppercase tracking-widest font-black">
+                      Name Reference
                     </label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-zinc-900 border border-white/5 rounded-lg py-2.5 px-3.5 text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-all"
+                      className="input-base"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-text-secondary uppercase tracking-wider">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] text-text-secondary uppercase tracking-widest font-black">
                       Email Address
                     </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-zinc-900 border border-white/5 rounded-lg py-2.5 px-3.5 text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-all"
+                      className="input-base"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-text-secondary uppercase tracking-wider">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] text-text-secondary uppercase tracking-widest font-black">
                       New Password (Optional)
                     </label>
                     <input
@@ -287,12 +307,12 @@ export default function UserDashboard() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-zinc-900 border border-white/5 rounded-lg py-2.5 px-3.5 text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-all"
+                      className="input-base"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-text-secondary uppercase tracking-wider">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] text-text-secondary uppercase tracking-widest font-black">
                       Confirm New Password
                     </label>
                     <input
@@ -300,19 +320,19 @@ export default function UserDashboard() {
                       placeholder="••••••••"
                       value={confirm}
                       onChange={(e) => setConfirm(e.target.value)}
-                      className="bg-zinc-900 border border-white/5 rounded-lg py-2.5 px-3.5 text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-all"
+                      className="input-base"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={submittingSettings}
-                    className="bg-primary hover:bg-primary-hover text-white font-bold py-2.5 rounded-lg transition-all shadow cursor-pointer mt-2 flex items-center justify-center gap-1.5"
+                    className="btn-primary w-full py-3 rounded-xl mt-2 flex items-center justify-center gap-2 select-none"
                   >
                     {submittingSettings ? (
                       <>
-                        <Loader2 size={13} className="animate-spin" />
-                        <span>Saving...</span>
+                        <Loader2 size={14} className="animate-spin text-white" />
+                        <span>Saving Settings...</span>
                       </>
                     ) : (
                       <span>Save Changes</span>
@@ -321,7 +341,7 @@ export default function UserDashboard() {
                 </form>
               </motion.div>
             )}
-          </>
+          </AnimatePresence>
         )}
       </div>
     </div>

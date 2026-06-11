@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, Mail, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function LoginPage() {
@@ -36,76 +36,93 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full flex-1 flex items-center justify-center py-20 px-4">
+    <div className="w-full flex-1 flex items-center justify-center py-20 px-4 grad-hero noise relative">
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
+        initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-sm glass rounded-xl p-8 shadow-2xl flex flex-col gap-6"
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md glass-card rounded-2xl p-8 md:p-10 shadow-2xl flex flex-col gap-8 border border-white/10"
       >
-        <div className="flex flex-col items-center gap-1.5 text-center">
-          <span className="text-3xl">🎬</span>
-          <h1 className="text-2xl font-black text-white tracking-wide">
-            Sign In to CineAI
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="text-4xl animate-bounce">🍿</span>
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-wide">
+            Welcome Back
           </h1>
-          <p className="text-[11px] text-text-muted">
-            Enjoy personalized movie ratings, custom lists, and AI chat.
+          <p className="text-xs text-text-secondary font-medium">
+            Sign in to access personalized recommendations and AI assistant.
           </p>
         </div>
 
         {error && (
-          <div className="text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 rounded-lg py-2 px-3 text-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 rounded-xl py-3 px-4 text-center"
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-xs font-semibold">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] text-text-secondary uppercase tracking-wider">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-xs font-semibold text-left">
+          {/* Email input field */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] text-text-secondary uppercase tracking-widest font-black">
               Email Address
             </label>
-            <input
-              type="email"
-              placeholder="name@domain.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-zinc-900 border border-white/5 rounded-lg py-2.5 px-3.5 text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-all"
-            />
+            <div className="relative flex items-center">
+              <input
+                type="email"
+                placeholder="name@domain.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-base pl-11"
+              />
+              <Mail size={14} className="absolute left-4 text-text-secondary" />
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] text-text-secondary uppercase tracking-wider">
+          {/* Password input field */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] text-text-secondary uppercase tracking-widest font-black">
               Password
             </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-zinc-900 border border-white/5 rounded-lg py-2.5 px-3.5 text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-all"
-            />
+            <div className="relative flex items-center">
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-base pl-11"
+              />
+              <Lock size={14} className="absolute left-4 text-text-secondary" />
+            </div>
           </div>
 
+          {/* Submit Action */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-primary/25 cursor-pointer mt-2 flex items-center justify-center gap-2"
+            className="btn-primary w-full py-3 rounded-xl mt-3 flex items-center justify-center gap-2 select-none"
           >
             {loading ? (
               <>
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={15} className="animate-spin text-white" />
                 <span>Signing In...</span>
               </>
             ) : (
-              <span>Sign In</span>
+              <>
+                <Sparkles size={15} className="fill-white" />
+                <span>Sign In</span>
+              </>
             )}
           </button>
         </form>
 
-        <div className="text-[11px] text-text-secondary text-center pt-2 border-t border-white/5">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-primary hover:text-primary-hover font-bold transition-all">
-            Sign Up
+        {/* Footer options */}
+        <div className="text-xs text-text-secondary text-center pt-4 border-t border-white/5 font-semibold">
+          New to CineAI?{" "}
+          <Link href="/register" className="text-primary hover:text-primary-hover font-black transition-colors ml-1">
+            Create an Account
           </Link>
         </div>
       </motion.div>

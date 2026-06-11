@@ -6,6 +6,7 @@ import { Search, X, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Movie } from "@/lib/types";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const SearchBar: React.FC = () => {
   const router = useRouter();
@@ -62,79 +63,88 @@ export const SearchBar: React.FC = () => {
   };
 
   return (
-    <div ref={dropdownRef} className="relative w-full max-w-sm">
-      {/* Input container */}
-      <div className="relative flex items-center w-full">
+    <div ref={dropdownRef} className="relative w-full">
+      {/* Input Field */}
+      <div className="relative flex items-center w-full group">
         <input
           type="text"
-          placeholder="Search movies, genres, actors..."
+          placeholder="Search catalog, genres..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim().length >= 2 && setIsOpen(true)}
-          className="w-full bg-zinc-900 border border-white/10 rounded-full py-1.5 pl-10 pr-9 text-xs text-white placeholder-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all font-medium"
+          className="input-base py-2 pl-10 pr-9 text-xs rounded-full font-semibold bg-[#0d0d12] border-white/5 group-hover:border-white/10 transition-all"
         />
-        <div className="absolute left-3.5 text-text-muted pointer-events-none">
-          <Search size={14} />
+        <div className="absolute left-3.5 text-text-secondary group-hover:text-white pointer-events-none transition-colors">
+          <Search size={13} />
         </div>
+        
         {loading ? (
-          <div className="absolute right-3.5 text-text-muted animate-spin">
-            <Loader2 size={14} />
+          <div className="absolute right-3.5 text-primary animate-spin">
+            <Loader2 size={13} />
           </div>
         ) : query ? (
           <button
             onClick={handleClear}
-            className="absolute right-3.5 text-text-muted hover:text-white cursor-pointer"
+            className="absolute right-3.5 text-text-secondary hover:text-white cursor-pointer transition-colors"
           >
-            <X size={14} />
+            <X size={13} />
           </button>
         ) : null}
       </div>
 
-      {/* Dropdown matches list */}
-      {isOpen && (results.length > 0 || query.trim().length >= 2) && (
-        <div className="absolute top-full mt-2 left-0 right-0 z-50 rounded-lg overflow-hidden glass shadow-2xl max-h-80 overflow-y-auto">
-          {results.length > 0 ? (
-            <div className="flex flex-col py-1">
-              {results.map((movie) => (
-                <button
-                  key={movie.id}
-                  onClick={() => handleSelectMovie(movie.id)}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 transition-colors text-left w-full border-b border-white/5 last:border-0"
-                >
-                  <div className="relative w-9 h-12 bg-zinc-800 rounded overflow-hidden shrink-0">
-                    {movie.poster_url ? (
-                      <Image
-                        src={movie.poster_url}
-                        alt={movie.title}
-                        fill
-                        sizes="36px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
-                        <span className="text-[10px]">🎬</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-white truncate">
-                      {movie.title}
-                    </span>
-                    <span className="text-[10px] text-text-secondary mt-0.5">
-                      {movie.release_year ? `${movie.release_year} • ` : ""}
-                      {movie.genres.split("|").slice(0, 2).join(", ")}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="px-4 py-3 text-center text-xs text-text-secondary">
-              No movies found for &quot;{query}&quot;
-            </div>
-          )}
-        </div>
-      )}
+      {/* Suggested Search results Dropdown */}
+      <AnimatePresence>
+        {isOpen && (results.length > 0 || query.trim().length >= 2) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute top-full mt-2.5 left-0 right-0 z-50 rounded-xl overflow-hidden glass shadow-2xl max-h-80 overflow-y-auto border border-white/10"
+          >
+            {results.length > 0 ? (
+              <div className="flex flex-col p-1.5 gap-0.5">
+                {results.map((movie) => (
+                  <button
+                    key={movie.id}
+                    onClick={() => handleSelectMovie(movie.id)}
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors text-left w-full rounded-lg"
+                  >
+                    <div className="relative w-8 h-11 bg-zinc-900 rounded-md overflow-hidden shrink-0 border border-white/5">
+                      {movie.poster_url ? (
+                        <Image
+                          src={movie.poster_url}
+                          alt={movie.title}
+                          fill
+                          sizes="32px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center">
+                          <span className="text-[10px]">🎬</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-white truncate">
+                        {movie.title}
+                      </span>
+                      <span className="text-[10px] text-text-secondary font-medium truncate mt-0.5">
+                        {movie.release_year ? `${movie.release_year} • ` : ""}
+                        {movie.genres.split("|").slice(0, 2).join(", ")}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="px-4 py-5 text-center text-xs font-semibold text-text-secondary bg-[#0d0d12]">
+                No matching titles for &quot;{query}&quot;
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
